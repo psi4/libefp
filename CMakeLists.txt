@@ -26,6 +26,7 @@ option_with_flags(ENABLE_XHOST "Enable processor-specific optimization" ON
                   "-xHost" "-march=native")
 option_with_print(FRAGLIB_UNDERSCORE_L "Installed fragment library has names ending in _L. Psi4 wants OFF" ON)
 option_with_print(FRAGLIB_DEEP "Installed fragment libary has hierarchical, not flat, filestructure. Psi4 wants OFF" ON)
+option_with_print(ENABLE_PYTHON_MODULE "Enable pybind11 bindings of library" OFF)
 
 ######################### Process & Validate Options ###########################
 include(autocmake_safeguards)
@@ -33,6 +34,12 @@ include(autocmake_omp)
 include(custom_static_library)
 
 find_package(TargetLAPACK REQUIRED)
+
+#  <<  Pybind11 & Python  >>
+set(PYBIND11_CPP_STANDARD "-std=c++11") #${CMAKE_CXX_STANDARD}")
+find_package(pybind11 2.0.0 CONFIG REQUIRED)
+message(STATUS "${Cyan}Using pybind11${ColourReset}: ${pybind11_INCLUDE_DIR} (version ${pybind11_VERSION} for Py${PYTHON_VERSION_STRING} and ${PYBIND11_CPP_STANDARD})")
+message(STATUS "${Cyan}Using Python ${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}${ColourReset}: ${PYTHON_EXECUTABLE}")
 
 ################################# Main Project #################################
 include(GNUInstallDirs)
@@ -84,6 +91,26 @@ foreach(_dotefp ${_dotefps})
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${_destdir}/${_efpfile} ${_destcontents})
 endforeach()
 list(REMOVE_DUPLICATES FRAGLIB_DATADIRS)
+
+# <<<  Python Module  >>>
+
+if(${ENABLE_PYTHON_MODULE})
+    pybind11_add_module(pylibefp pylibefp/pylibefp.cc ${source_list})
+    target_include_directories(pylibefp PRIVATE ${src_prefix})
+    target_link_libraries(pylibefp PRIVATE efp)
+    #add_library(pylibefp SHARED pylibefp/pylibefp.cc ${sources_list})
+    #target_link_libraries(pylibefp PUBLIC pybind11::module)
+endif()
+
+
+
+#set_target_properties(pylibefp PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"  # for python module
+#                               OUTPUT_NAME pylibefp
+#                               EXPORT_NAME pylibefp
+#                               SUFFIX ".so")  # for python module
+                               ##SUFFIX "${PYTHON_MODULE_EXTENSION}" # for python module
+                               #INSTALL_RPATH "${psi4_RPATH}"
+                               #BUILD_WITH_INSTALL_RPATH ON)
 
 # <<<  Install  >>>
 
