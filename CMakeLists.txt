@@ -95,11 +95,13 @@ list(REMOVE_DUPLICATES FRAGLIB_DATADIRS)
 # <<<  Python Module  >>>
 
 if(${ENABLE_PYTHON_MODULE})
+    enable_language(CXX)
     pybind11_add_module(pylibefp pylibefp/pylibefp.cc ${source_list})
     target_include_directories(pylibefp PRIVATE ${src_prefix})
     target_link_libraries(pylibefp PRIVATE efp)
     #add_library(pylibefp SHARED pylibefp/pylibefp.cc ${sources_list})
     #target_link_libraries(pylibefp PUBLIC pybind11::module)
+    add_subdirectory(pylibefp)
 endif()
 
 
